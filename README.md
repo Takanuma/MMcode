@@ -1,2 +1,2 @@
 # MMcode
-MugenMemoryのコードのみ
+MugenMemoryのコードのみ掲載。
