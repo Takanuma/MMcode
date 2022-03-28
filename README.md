@@ -3,4 +3,5 @@
 MugenMemoryのコードのみ掲載。
 学習しながらの
 
-## MugenMemory
+## MugenMemoryとは
+対戦型の神経衰弱ゲーム。
