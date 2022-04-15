@@ -12,7 +12,7 @@ public class MainToken : MonoBehaviour
 
     public Sprite[] faces;
     public Sprite back;
-    Sprite cleared;
+    public Sprite cleared;
     public int faceIndex;
     public bool matched = false;
     public bool isChecked = false;
@@ -66,7 +66,7 @@ public class MainToken : MonoBehaviour
 
         StartCoroutine(stopTouchMe(tmp));
 
-        if (matched != false &&  gameControl.GetComponent<GameControl>().waitToTouch != 0) return;
+        if (matched != false &&  gameControl.GetComponent<GameControl>().checkTouching == false) return;
         if (spriteRenderer.sprite != back) return;
         if (gameControl.GetComponent<GameControl>().TwoCardsUp() == false){   
             audioSource.PlayOneShot(sound1);
@@ -99,7 +99,7 @@ public class MainToken : MonoBehaviour
         // 合計0.2秒
         transform.DORotate(new Vector3(0,360,0), 0.3f, RotateMode.LocalAxisAdd).SetEase(Ease.OutSine);
         yield return new WaitForSeconds(0.1f);
-        gameControl.GetComponent<GameControl>().RemoveVisibleFace(this.faceIndex);
+        //消した//gameControl.GetComponent<GameControl>().RemoveVisibleFace(this.faceIndex);
         spriteRenderer.sprite = back;
     }
 

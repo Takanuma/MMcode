@@ -18,7 +18,6 @@ public class GridItemSizeSetter : MonoBehaviour
                 - gridLayout.spacing.y * (rowCount - 1)) / rowCount);
         }
     }
-
     public int CellWidth
     {
         get

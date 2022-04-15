@@ -14,7 +14,7 @@ public class EnemyControl : MonoBehaviour
     GameObject tempObj2;
     GameControl gc;
     
-    MainToken mt;
+    CardScript mt;
     MasterMonsterModel mData;
     public int cardsCnt;
     int WaitingTime = 0;
@@ -39,31 +39,22 @@ public class EnemyControl : MonoBehaviour
     {
         textObj.GetComponent<Text>().text = ((int)currentHP).ToString();
         EnemyHpber.GetComponent<HpBarSystem>().HPDown(currentHP, maxHP);
-        if(gc.waitToTouch==1)return;
-        if(WaitingTime == 0 && gc.turn == 1){
+        if(gc.checkTouching == true)return;
+        /*if(WaitingTime == 0 && gc.turn == 1){
             StartCoroutine(SelectCard());
             WaitingTime = 1;
-        }
+        }*/
         if(WaitingTime == 0 && currentHP <= 0){
             StartCoroutine(Death());
             WaitingTime = 1;
         }
     }
 
-    private IEnumerator SelectCard(){
+    public IEnumerator SelectCard(){
+        WaitingTime = 1;
         int temp=0;
         yield return new WaitForSeconds(0.5f);
-        // カードリストの中身を整理する処理
-        for(int i = 0; i < cardsCnt; i++){
-            tempObj = gc.list_card[i];
-            if(tempObj.GetComponent<MainToken>().IsCleared()==true){
-                Debug.Log("カードけす"+gc.list_card[i]);
-                gc.list_card.RemoveAt(i);
-                i = -1;
-                cardsCnt = gc.list_card.Count;
-            }
-
-        }
+        SortCardList();
         //Debug.Log("整理後中身確認");
         for(int i = 0; i < cardsCnt; i++){
             //Debug.Log(gc.list_card[i]);
@@ -84,8 +75,8 @@ public class EnemyControl : MonoBehaviour
             
         }
         tempObj = gc.list_card[temp];
-        tempObj.GetComponent<MainToken>().CheckCards();
-
+        tempObj.GetComponent<CardScript>().CheckCards();
+        yield return new WaitForSeconds(0.5f);
         while(true){
             Debug.Log("2枚目のカードの選択");
             temp = Random.Range (0, cardsCnt);
@@ -93,9 +84,8 @@ public class EnemyControl : MonoBehaviour
             if(gc.list_card[temp]==true&&tempObj!=tempObj2)break;
             
         }
-        yield return new WaitForSeconds(0.5f);
         tempObj2 = gc.list_card[temp];
-        tempObj2.GetComponent<MainToken>().CheckCards();
+        tempObj2.GetComponent<CardScript>().CheckCards();
         yield return new WaitForSeconds(1.0f);
         WaitingTime=0;
     }
@@ -125,15 +115,15 @@ public class EnemyControl : MonoBehaviour
         // 見たことがあるカードを選ぶ処理
         for(int i = 0; i < cardsCnt-1; i++){
             tempObj = gc.list_card[i];
-            if(tempObj.GetComponent<MainToken>().isChecked==true){
+            if(tempObj.GetComponent<CardScript>().isChecked==true){
                 for(int j = i+1; j < cardsCnt; j++){
                     tempObj2 = gc.list_card[j];
-                    if(tempObj2.GetComponent<MainToken>().isChecked==true&&tempObj.GetComponent<MainToken>().faceIndex==tempObj2.GetComponent<MainToken>().faceIndex){
+                    if(tempObj2.GetComponent<CardScript>().isChecked==true&&tempObj.GetComponent<CardScript>().faceIndex==tempObj2.GetComponent<CardScript>().faceIndex){
                         Debug.Log("AI発動");
-                        tempObj.GetComponent<MainToken>().CheckCards();
+                        tempObj.GetComponent<CardScript>().CheckCards();
                         yield return new WaitForSeconds(0.5f);
-                        tempObj2.GetComponent<MainToken>().CheckCards();
-                        yield return new WaitForSeconds(1.0f);
+                        tempObj2.GetComponent<CardScript>().CheckCards();
+                        yield return new WaitForSeconds(0.5f);
                         WaitingTime=0;
                         yield break;
                     }
@@ -149,17 +139,17 @@ public class EnemyControl : MonoBehaviour
             
         }
         tempObj = gc.list_card[temp];
-        Debug.Log(tempObj.GetComponent<MainToken>().isChecked);
-        tempObj.GetComponent<MainToken>().CheckCards();
+        Debug.Log(tempObj.GetComponent<CardScript>().isChecked);
+        tempObj.GetComponent<CardScript>().CheckCards();
         // 見たことがあったらカードを選ぶ処理
         Debug.Log("見たことある次のカード");
         for(int i = 0; i < cardsCnt-1; i++){
             tempObj2 = gc.list_card[i];
-            if(tempObj2.GetComponent<MainToken>().isChecked==true&&tempObj.GetComponent<MainToken>().faceIndex==tempObj2.GetComponent<MainToken>().faceIndex&&tempObj!=tempObj2){
+            if(tempObj2.GetComponent<CardScript>().isChecked==true&&tempObj.GetComponent<CardScript>().faceIndex==tempObj2.GetComponent<CardScript>().faceIndex&&tempObj!=tempObj2){
                 yield return new WaitForSeconds(0.5f);
                 tempObj2 = gc.list_card[i];
-                tempObj2.GetComponent<MainToken>().CheckCards();
-                yield return new WaitForSeconds(1.0f);
+                tempObj2.GetComponent<CardScript>().CheckCards();
+                yield return new WaitForSeconds(0.5f);
                 WaitingTime=0;
                 yield break;
                     
@@ -175,9 +165,21 @@ public class EnemyControl : MonoBehaviour
         }
         yield return new WaitForSeconds(0.5f);
         tempObj2 = gc.list_card[temp];
-        tempObj2.GetComponent<MainToken>().CheckCards();
-        yield return new WaitForSeconds(1.0f);
+        tempObj2.GetComponent<CardScript>().CheckCards();
+        yield return new WaitForSeconds(0.5f);
         WaitingTime=0;
+    }
+    // カードリストの中身を整理する関数
+    private void SortCardList(){
+        for(int i = 0; i < cardsCnt; i++){
+            tempObj = gc.list_card[i];
+            if(tempObj.GetComponent<CardScript>().isMatched==true){
+                Debug.Log("リストからカード削除"+gc.list_card[i]);
+                gc.list_card.RemoveAt(i);
+                i = -1;
+                cardsCnt = gc.list_card.Count;
+            }
+        }
     }
 
     public int SetMonster(int defeats){
@@ -234,9 +236,11 @@ public class EnemyControl : MonoBehaviour
 
     private IEnumerator Death(){
         // 合計0.5秒
+
+        //クリア！
         GameObject obj = Instantiate( Resources.Load("Prefabs/ClearText", typeof(GameObject) ) ) as GameObject;
         Destroy(obj,2.8f);
-        
+        // 敵の準備中
         obj = Instantiate( Resources.Load("Prefabs/NowLoading",
         typeof(GameObject) ) ,Header.transform) as GameObject;
         Destroy(obj,2.0f);
@@ -247,10 +251,9 @@ public class EnemyControl : MonoBehaviour
         yield return new WaitForSeconds(0.1f);
         gc.SetMonster();
         gc.ResetGame();
+        gc.SetGame();
         yield return new WaitForSeconds(0.5f);
         WaitingTime = 0;
     }
-
     
-
 }
